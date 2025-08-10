@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper.js";
+import { texture } from "three/tsl";
+import gsap from "gsap";
 
 const gui = new GUI();
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
@@ -12,21 +13,47 @@ if (!canvas) {
 // Scene
 const scene = new THREE.Scene();
 
+const textureLoader = new THREE.TextureLoader();
+const bakedShadow = textureLoader.load("/shadow/bakedShadow.jpg");
+bakedShadow.colorSpace = THREE.SRGBColorSpace;
+
+const simpleShadow = textureLoader.load("/shadow/simpleShadow.jpg");
+
 /**
  * Lights
  */
 // Ambient light
-const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-gui.add(ambientLight, "intensity").min(0).max(3).step(0.001);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+gui
+  .add(ambientLight, "intensity")
+  .min(0)
+  .max(3)
+  .step(0.001)
+  .name("Ambient Light Intensity");
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.3);
 directionalLight.position.set(2, 2, -1);
 gui.add(directionalLight, "intensity").min(0).max(3).step(0.001);
-gui.add(directionalLight.position, "x").min(-5).max(5).step(0.001);
-gui.add(directionalLight.position, "y").min(-5).max(5).step(0.001);
-gui.add(directionalLight.position, "z").min(-5).max(5).step(0.001);
+gui
+  .add(directionalLight.position, "x")
+  .min(-5)
+  .max(5)
+  .step(0.001)
+  .name("Dir Light X");
+gui
+  .add(directionalLight.position, "y")
+  .min(-5)
+  .max(5)
+  .step(0.001)
+  .name("Dir Light Y");
+gui
+  .add(directionalLight.position, "z")
+  .min(-5)
+  .max(5)
+  .step(0.001)
+  .name("Dir Light Z");
 scene.add(directionalLight);
 
 directionalLight.castShadow = true;
@@ -49,6 +76,20 @@ directionalLight.shadow.camera.bottom = -2;
 // directionalLight.shadow.radius = 10;
 // shadow map algorithm
 
+// Spot light
+const pointLight = new THREE.SpotLight(0xffffff, 2.7);
+pointLight.castShadow = true;
+pointLight.position.set(-1, 1, 0);
+pointLight.shadow.mapSize.set(1024, 1024);
+pointLight.shadow.camera.near = 0.5;
+pointLight.shadow.camera.far = 5;
+scene.add(pointLight);
+
+// Positions of last 6 renders
+const pointLightHelper = new THREE.SpotLightHelper(pointLight); // Helper to visualize the spot light
+pointLightHelper.visible = false;
+scene.add(pointLightHelper);
+
 /**
  * Materials
  */
@@ -69,6 +110,17 @@ plane.position.y = -0.5;
 plane.receiveShadow = true;
 
 scene.add(sphere, plane);
+const sphereShadow = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.5, 1.5),
+  new THREE.MeshBasicMaterial({
+    color: 0x000000,
+    transparent: true,
+    alphaMap: simpleShadow,
+  })
+);
+sphereShadow.rotation.x = -Math.PI * 0.5;
+sphereShadow.position.y = plane.position.y + 0.01; // Slightly above the plane to avoid z-fighting
+scene.add(sphereShadow);
 
 /**
  * Sizes
@@ -119,7 +171,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap; // or THREE.VSMShadowMap for VSM shadows
 
 /**
@@ -129,6 +181,22 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  // Update sphere
+  sphere.position.x = Math.sin(elapsedTime) * 1.5;
+  sphere.position.z = Math.cos(elapsedTime) * 1.5;
+  sphere.position.y = Math.abs(Math.sin(elapsedTime) + 0.5);
+
+  // update shadow position
+  sphereShadow.position.x = sphere.position.x;
+  sphereShadow.position.z = sphere.position.z;
+  gsap.to(sphereShadow.material, {
+    duration: 0.5,
+    opacity: Math.max(0, 1 - sphere.position.y * 2), // Fade out shadow as sphere goes up
+    ease: "power2.out",
+  });
+  // OR
+  // sphereShadow.material.opacity = Math.max(0, 1 - sphere.position.y * 2);
 
   // Update controls
   controls.update();

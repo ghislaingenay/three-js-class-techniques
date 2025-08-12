@@ -67,6 +67,22 @@ const changeMeshYPositions = () => {
 };
 
 changeMeshYPositions();
+mesh1.position.x = 2;
+mesh2.position.x = -2;
+mesh3.position.x = 2;
+
+/**
+ * Cursor
+ */
+const cursor = {
+  x: 0,
+  y: 0,
+};
+
+window.addEventListener("mousemove", (event) => {
+  cursor.x = event.clientX / sizes.width - 0.5;
+  cursor.y = -(event.clientY / sizes.height - 0.5);
+});
 
 gui
   .add(parameters, "objectDistance")
@@ -134,6 +150,12 @@ const tick = () => {
 
   // Animate camera
   camera.position.y = (-scrollY / sizes.height) * parameters.objectDistance;
+
+  // Parallax effect
+  const parallaxX = cursor.x * 2;
+  const parallaxY = cursor.y * 2;
+  camera.position.x += (parallaxX - camera.position.x) * 0.1;
+  camera.position.y += (parallaxY - camera.position.y) * 0.1;
 
   for (const mesh of sectionMeshes) {
     mesh.rotation.x = elapsedTime * 0.1;

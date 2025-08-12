@@ -8,6 +8,11 @@ const learning = {
   shadow: shadow,
   haunted: haunted,
   particle: particle,
+  galaxy: () => {
+    import("./galaxy").then((module) => {
+      module.default();
+    });
+  },
 };
 
-learning.particle();
+learning.galaxy();

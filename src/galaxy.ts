@@ -18,9 +18,12 @@ const textureLoader = new THREE.TextureLoader();
 
 let parameters = {
   count: 100000,
-  size: 0.1,
+  size: 0.02,
   radius: 5,
   branches: 3,
+  spin: 1,
+  randomness: 0.4,
+  randomnessPower: 3, // how much the randomness will be applied
 };
 
 let geometry: THREE.BufferGeometry | null = null;
@@ -38,12 +41,34 @@ const generateGalaxy = () => {
   for (let i = 0; i < parameters.count; i++) {
     const i3 = i * 3;
     const radius = Math.random() * parameters.radius;
-    positions[i3] = radius;
-    positions[i3 + 1] = radius;
-    positions[i3 + 2] = radius;
+    const branchIndex = i % parameters.branches;
+    const branchAngle = (branchIndex / parameters.branches) * Math.PI * 2;
+    // const branchAngleRandomize = branchAngle + (Math.random() - 0.5) * 0.1;
+    const randomX =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? -1 : 1) *
+      parameters.randomness *
+      radius;
+    const randomY =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? -1 : 1) *
+      parameters.randomness *
+      radius;
+    const randomZ =
+      Math.pow(Math.random(), parameters.randomnessPower) *
+      (Math.random() < 0.5 ? -1 : 1) *
+      parameters.randomness *
+      radius;
+
+    const spinAngle = radius * parameters.spin; // more radius => more spin
+    positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
+    positions[i3 + 1] = randomY;
+    positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ;
     // positions[i3] = (Math.random() - 0.5) * 10;
     // positions[i3 + 1] = (Math.random() - 0.5) * 10;
     // positions[i3 + 2] = (Math.random() - 0.5) * 10;
+
+    // one further from the center will have to move faster
   }
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   material = new THREE.PointsMaterial({
@@ -87,6 +112,25 @@ gui
   .step(1)
   .onFinishChange(generateGalaxy);
 
+gui
+  .add(parameters, "spin")
+  .min(-5)
+  .max(5)
+  .step(0.01)
+  .onFinishChange(generateGalaxy);
+gui
+  .add(parameters, "randomness")
+  .min(0)
+  .max(2)
+  .step(0.001)
+  .onFinishChange(generateGalaxy);
+
+gui
+  .add(parameters, "randomnessPower")
+  .min(0)
+  .max(10)
+  .step(0.001)
+  .onFinishChange(generateGalaxy);
 /**
  * Sizes
  */

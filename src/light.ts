@@ -4,6 +4,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RectAreaLightHelper } from "three/examples/jsm/helpers/RectAreaLightHelper.js";
 
 const gui = new GUI();
+gui.close(); // Close the GUI by default
+
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
 if (!canvas) {
   throw new Error("Canvas element not found");

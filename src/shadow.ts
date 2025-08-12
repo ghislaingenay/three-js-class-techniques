@@ -5,6 +5,7 @@ import { texture } from "three/tsl";
 import gsap from "gsap";
 
 const gui = new GUI();
+gui.close(); // Close the GUI by default
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
 if (!canvas) {
   throw new Error("Canvas element not found");

@@ -325,14 +325,41 @@ for (let i = 0; i < 30; i++) {
  * Lights
  */
 // Ambient light
-const ambientLight = new THREE.AmbientLight("#ffffff", 0.5);
+const ambientLight = new THREE.AmbientLight("#86cdff", 0.275);
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight("#ffffff", 1.5);
+const directionalLight = new THREE.DirectionalLight("#86cdff", 1);
 directionalLight.position.set(3, 2, -8);
 scene.add(directionalLight);
 
+// Door Light
+const doorLight = new THREE.PointLight("#ff7d46", 5);
+doorLight.position.set(0, 2.2, 2.25); // Position the light slightly in front of the door
+house.add(doorLight);
+
+// Ghosts
+const ghost1 = new THREE.PointLight("#8800ff", 6);
+const ghost2 = new THREE.PointLight("#ff0088", 6);
+const ghost3 = new THREE.PointLight("#ff0000", 6);
+ghost1.castShadow = true; // Enable shadow casting for the ghost
+ghost2.castShadow = true; // Enable shadow casting for the ghost
+ghost3.castShadow = true; // Enable shadow casting for the ghost
+ghost1.shadow.mapSize.set(256, 256); // Set the shadow map size for the ghost
+ghost2.shadow.mapSize.set(256, 256); // Set the shadow map size for the ghost
+ghost3.shadow.mapSize.set(256, 256); // Set the
+
+// no need for the door => doesn't make a huge difference => removed for improved performance
+walls.receiveShadow = true;
+walls.castShadow = true;
+roof.castShadow = true;
+floor.receiveShadow = true;
+scene.add(ghost1, ghost2, ghost3);
+
+for (const grave of graves.children) {
+  grave.castShadow = true; // Enable shadow casting for the graves
+  grave.receiveShadow = true; // Enable shadow receiving for the graves
+}
 /**
  * Sizes
  */
@@ -382,16 +409,43 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
+renderer.shadowMap.enabled = true; // Enable shadow map
 /**
  * Animate
  */
 const timer = new THREE.Timer();
 
+const handleGhostPosition = (
+  ghost: THREE.PointLight,
+  radius = 4,
+  direction = 1,
+  frequency = 0.5
+) => {
+  const elapsedTime = timer.getElapsed();
+  const angle = direction * elapsedTime * frequency;
+  ghost.position.x = Math.cos(angle * 0.5) * radius;
+  ghost.position.z = Math.sin(angle * 0.5) * radius;
+  ghost.position.y =
+    Math.sin(angle) * Math.sin(angle * 2.34) * Math.sin(angle * 3.45) + 1.5; // Add some vertical movement
+};
+
 const tick = () => {
   // Timer
   timer.update();
   const elapsedTime = timer.getElapsed();
+
+  handleGhostPosition(ghost1, 4);
+  handleGhostPosition(ghost2, 5, -1);
+  handleGhostPosition(ghost2, 5, -1, 0.33);
+  // const ghost1Angle = elapsedTime * 0.5;
+  // ghost1.position.x = Math.cos(ghost1Angle * 0.5) * 4;
+  // ghost1.position.z = Math.sin(ghost1Angle * 0.5) * 4;
+
+  // ghost1.position.y =
+  //   Math.sin(ghost1Angle) *
+  //     Math.sin(ghost1Angle * 2.34) *
+  //     Math.sin(ghost1Angle * 3.45) +
+  //   1.5; // Add some vertical movement
 
   // Update controls
   controls.update();

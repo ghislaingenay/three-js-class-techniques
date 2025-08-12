@@ -13,6 +13,11 @@ const learning = {
       module.default();
     });
   },
+  scrollAnimation: () => {
+    import("./scroll_animation").then((module) => {
+      module.default();
+    });
+  },
 };
 
-learning.galaxy();
+learning.scrollAnimation();

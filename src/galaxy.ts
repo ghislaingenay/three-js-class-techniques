@@ -3,6 +3,7 @@ import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 const gui = new GUI();
+gui.close();
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
 if (!canvas) {
   throw new Error("Canvas element not found");

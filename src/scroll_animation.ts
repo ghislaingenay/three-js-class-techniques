@@ -1,16 +1,14 @@
 import * as THREE from "three";
 import GUI from "lil-gui";
+import gsap from "gsap";
 
 const gui = new GUI();
 
 const parameters = {
   materialColor: "#ffeded",
   objectDistance: 4,
+  particleCount: 1000,
 };
-
-gui.addColor(parameters, "materialColor").onChange(() => {
-  material.color.set(parameters.materialColor);
-});
 
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
 if (!canvas) {
@@ -71,6 +69,8 @@ mesh1.position.x = 2;
 mesh2.position.x = -2;
 mesh3.position.x = 2;
 
+const sectionMeshes = [mesh1, mesh2, mesh3];
+
 /**
  * Cursor
  */
@@ -106,6 +106,34 @@ window.addEventListener("resize", () => {
 });
 
 /**
+ * Particules
+ */
+const particleCount = 1000;
+const vertices = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount * 3; i++) {
+  const i3 = i * 3;
+  vertices[i3] = (Math.random() - 0.5) * 10;
+  vertices[i3 + 1] =
+    parameters.objectDistance * 0.5 -
+    Math.random() * parameters.objectDistance * sectionMeshes.length;
+  vertices[i3 + 2] = (Math.random() - 0.5) * 10;
+}
+
+const paticleGeometry = new THREE.BufferGeometry();
+paticleGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(vertices, 3)
+);
+
+const paticleMaterial = new THREE.PointsMaterial({
+  size: 0.03,
+  sizeAttenuation: true,
+  color: parameters.materialColor,
+});
+const particles = new THREE.Points(paticleGeometry, paticleMaterial);
+scene.add(particles);
+
+/**
  * Camera
  */
 // Base camera
@@ -117,6 +145,11 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.z = 6;
 scene.add(camera);
+
+gui.addColor(parameters, "materialColor").onChange(() => {
+  material.color.set(parameters.materialColor);
+  paticleMaterial.color.set(parameters.materialColor);
+});
 
 /**
  * Renderer
@@ -133,9 +166,21 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
  * Scroll Animation
  */
 let scrollY = window.scrollY;
+let currentSection = 0;
 
 window.addEventListener("scroll", () => {
   scrollY = window.scrollY;
+  const newSection = Math.round(scrollY / sizes.height); // cut at 0.5
+  if (newSection !== currentSection) {
+    currentSection = newSection;
+    gsap.to(sectionMeshes[currentSection].rotation, {
+      duration: 1,
+      x: "+=6",
+      y: "+=3",
+      ease: "power2.inOut",
+      z: "+=1.5",
+    });
+  }
 });
 
 /**
@@ -143,8 +188,6 @@ window.addEventListener("scroll", () => {
  */
 const clock = new THREE.Clock();
 let previousTime = 0;
-
-const sectionMeshes = [mesh1, mesh2, mesh3];
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
@@ -161,8 +204,8 @@ const tick = () => {
   camera.position.y += (parallaxY - camera.position.y) * 2 * deltaTime;
 
   for (const mesh of sectionMeshes) {
-    mesh.rotation.x = elapsedTime * 0.1;
-    mesh.rotation.y = elapsedTime * 0.12;
+    mesh.rotation.x += deltaTime * 0.1;
+    mesh.rotation.y += deltaTime * 0.12;
   }
   // Render
   renderer.render(scene, camera);

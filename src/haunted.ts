@@ -4,6 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Sky } from "three/examples/jsm/Addons.js";
 
 const gui = new GUI();
+gui.close(); // Close the GUI to avoid cluttering the console
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
 if (!canvas) {
   throw new Error("Canvas element not found");

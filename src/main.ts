@@ -10,4 +10,4 @@ const learning = {
   particle: particle,
 };
 
-learning.haunted();
+learning.particle();

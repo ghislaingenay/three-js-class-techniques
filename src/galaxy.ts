@@ -24,11 +24,14 @@ let parameters = {
   spin: 1,
   randomness: 0.4,
   randomnessPower: 3, // how much the randomness will be applied
+  insideColor: "#ff6030",
+  outsideColor: "#1b3984",
 };
 
 let geometry: THREE.BufferGeometry | null = null;
 let material: THREE.PointsMaterial | null = null;
 let points: THREE.Points | null = null;
+
 const generateGalaxy = () => {
   // destroy old galaxy
   if (points !== null) {
@@ -37,9 +40,16 @@ const generateGalaxy = () => {
     scene.remove(points);
   }
   geometry = new THREE.BufferGeometry();
+
+  const insideColor = new THREE.Color(parameters.insideColor);
+  const outsideColor = new THREE.Color(parameters.outsideColor);
   const positions = new Float32Array(parameters.count * 3);
+  const colors = new Float32Array(parameters.count * 3);
+
   for (let i = 0; i < parameters.count; i++) {
     const i3 = i * 3;
+
+    // Position
     const radius = Math.random() * parameters.radius;
     const branchIndex = i % parameters.branches;
     const branchAngle = (branchIndex / parameters.branches) * Math.PI * 2;
@@ -69,10 +79,21 @@ const generateGalaxy = () => {
     // positions[i3 + 2] = (Math.random() - 0.5) * 10;
 
     // one further from the center will have to move faster
+
+    // Color
+    // Create third color based on the radius
+    const mixedColor = insideColor.clone();
+    // Use .lerp to mix the inside and outside colors based on the radius
+    mixedColor.lerp(outsideColor, radius / parameters.radius);
+    colors[i3] = mixedColor.r;
+    colors[i3 + 1] = mixedColor.g;
+    colors[i3 + 2] = mixedColor.b;
   }
   geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   material = new THREE.PointsMaterial({
     size: parameters.size,
+    vertexColors: true,
     sizeAttenuation: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -131,6 +152,12 @@ gui
   .max(10)
   .step(0.001)
   .onFinishChange(generateGalaxy);
+
+gui
+  .addColor(parameters, "insideColor")
+
+  .onFinishChange(generateGalaxy);
+gui.addColor(parameters, "outsideColor").onFinishChange(generateGalaxy);
 /**
  * Sizes
  */
@@ -188,6 +215,11 @@ const clock = new THREE.Clock();
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+
+  // move the camera around the center
+  camera.position.x = Math.cos(elapsedTime * 0.1) * 3;
+  camera.position.z = Math.sin(elapsedTime * 0.1) * 3;
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
 
   // Update controls
   controls.update();

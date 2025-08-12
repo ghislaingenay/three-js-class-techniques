@@ -142,20 +142,23 @@ window.addEventListener("scroll", () => {
  * Animate
  */
 const clock = new THREE.Clock();
+let previousTime = 0;
 
 const sectionMeshes = [mesh1, mesh2, mesh3];
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
+  const deltaTime = elapsedTime - previousTime;
+  previousTime = elapsedTime;
 
   // Animate camera
   camera.position.y = (-scrollY / sizes.height) * parameters.objectDistance;
 
   // Parallax effect
-  const parallaxX = cursor.x * 2;
-  const parallaxY = cursor.y * 2;
-  camera.position.x += (parallaxX - camera.position.x) * 0.1;
-  camera.position.y += (parallaxY - camera.position.y) * 0.1;
+  const parallaxX = cursor.x * 0.5;
+  const parallaxY = cursor.y * 0.5;
+  camera.position.x += (parallaxX - camera.position.x) * 2 * deltaTime;
+  camera.position.y += (parallaxY - camera.position.y) * 2 * deltaTime;
 
   for (const mesh of sectionMeshes) {
     mesh.rotation.x = elapsedTime * 0.1;

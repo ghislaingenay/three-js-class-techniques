@@ -14,13 +14,6 @@ const scene = new THREE.Scene();
 /**
  * House
  */
-// Temporary sphere
-const sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(1, 32, 32),
-  new THREE.MeshStandardMaterial({ roughness: 0.7 })
-);
-scene.add(sphere);
-
 // Floor
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(20, 20),
@@ -28,6 +21,37 @@ const floor = new THREE.Mesh(
 );
 floor.rotation.x = -Math.PI * 0.5; // Rotate the floor to be horizontal
 scene.add(floor);
+
+// House container
+const house = new THREE.Group();
+scene.add(house);
+
+// House walls
+const walls = new THREE.Mesh(
+  new THREE.BoxGeometry(4, 2.5, 4),
+  new THREE.MeshStandardMaterial()
+);
+walls.position.y += 1.25; // Position the walls above the floor
+house.add(walls);
+
+// No pyramid standard geometry in Three.js, so we create a custom geometry => Cone
+//  radialSegments to 4 creates a cone with 4 sides, which is a pyramid with a square base.
+const roof = new THREE.Mesh(
+  new THREE.ConeGeometry(3.5, 2, 4),
+  new THREE.MeshStandardMaterial()
+);
+roof.position.y = 2.5 + 0.75; // Position the roof above the walls
+roof.rotation.y = Math.PI * 0.25; // Rotate the roof to align with
+house.add(roof);
+
+// Door
+const door = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.2, 2.2),
+  new THREE.MeshStandardMaterial()
+);
+door.position.y = 1 + 0.01;
+door.position.z = 2 + 0.01; // Position the door in front of the house
+house.add(door);
 
 /**
  * Lights

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import GUI from "lil-gui";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { Sky } from "three/examples/jsm/Addons.js";
 
 const gui = new GUI();
 const canvas = document.querySelector<HTMLCanvasElement>("#webgl");
@@ -329,12 +330,12 @@ const ambientLight = new THREE.AmbientLight("#86cdff", 0.275);
 scene.add(ambientLight);
 
 // Directional light
-const directionalLight = new THREE.DirectionalLight("#86cdff", 1);
+const directionalLight = new THREE.DirectionalLight("#86cdff", 0.7);
 directionalLight.position.set(3, 2, -8);
 scene.add(directionalLight);
 
 // Door Light
-const doorLight = new THREE.PointLight("#ff7d46", 5);
+const doorLight = new THREE.PointLight("#ff7d46", 0.5, 4);
 doorLight.position.set(0, 2.2, 2.25); // Position the light slightly in front of the door
 house.add(doorLight);
 
@@ -360,6 +361,43 @@ for (const grave of graves.children) {
   grave.castShadow = true; // Enable shadow casting for the graves
   grave.receiveShadow = true; // Enable shadow receiving for the graves
 }
+
+// Mapping
+// Optimize shadow map and make sure that fit the scene nicely
+directionalLight.shadow.mapSize.set(256, 256); // Set the shadow
+directionalLight.shadow.camera.near = 1;
+directionalLight.shadow.camera.far = 20;
+directionalLight.shadow.camera.top = 8;
+directionalLight.shadow.camera.right = 8;
+directionalLight.shadow.camera.bottom = -8;
+directionalLight.shadow.camera.left = -8;
+
+for (const ghost of [ghost1, ghost2, ghost3]) {
+  ghost.shadow.mapSize.set(256, 256);
+  ghost.shadow.camera.far = 10; // Set the far plane for the shadow camera
+}
+
+/**
+ * Skybox
+ */
+const sky = new Sky();
+// Atmospheric scattering parameters for realistic sky rendering
+sky.material.uniforms["turbidity"].value = 10; // Atmospheric haze/pollution (1-20, higher = hazier/more polluted sky)
+sky.material.uniforms["rayleigh"].value = 2; // Blue light scattering (0-4, higher = more blue sky)
+sky.material.uniforms["mieCoefficient"].value = 0.005; // Particle scattering for clouds/fog (0-0.1, higher = more hazy)
+sky.material.uniforms["mieDirectionalG"].value = 0.8; // Sun glow intensity (-1 to 1, higher = brighter sun halo)
+sky.material.uniforms["sunPosition"].value.set(0.3, -0.038, -0.95); // Position of the sun in the sky
+// sky.scale.setScalar(450000); // Scale the skybox to cover the entire scene
+sky.scale.setScalar(450000); // Scale the skybox to cover the entire scene
+
+scene.add(sky);
+
+/**
+ * Fog
+ */
+// scene.fog = new THREE.Fog("#ff0000", 1, 13);
+scene.fog = new THREE.FogExp2("#04343f", 0.07); // the further away the object is, the more fog it will have
+
 /**
  * Sizes
  */

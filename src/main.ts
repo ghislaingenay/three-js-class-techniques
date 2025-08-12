@@ -7,4 +7,5 @@ const learning = {
   shadow: shadow,
   haunted: haunted,
 };
+
 learning.haunted();
